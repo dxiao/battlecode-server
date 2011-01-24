@@ -60,9 +60,9 @@ public final class GameConstants {
     /** Maximum resources granted per flux mine before it starts to deplete */
     public static final double MINE_RESOURCES = 1.0;
     /** Minimum resources granted per flux mine after it is fully depleted */
-    public static final double MINE_DEPLETED_RESOURCES = 0.15;
+    public static final double MINE_DEPLETED_RESOURCES = 1.0;
     /** Rounds that a mine is fully operational */
-    public static final int MINE_ROUNDS = 2000;
+    public static final int MINE_ROUNDS = 1000000;
     /** Rounds for the mine to lose 0.01 */
     public static final int MINE_DEPLETION_RATE = 5;
     /** Damage done by successive attacks of the beam as long as it is focused */
