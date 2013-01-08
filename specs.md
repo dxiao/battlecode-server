@@ -265,22 +265,22 @@ The following is a detailed map of a robot's execution order to remove ambiguiti
 3. Power is refunded based on remaining bytecodes by a factor of `GameConstants.ENERGY_COST_PER_BYTECODE`, even if it paid its upkeep with energon.
 4. Robots perform actions.
 
-    a. If the robot is on the last turn of mining, the mines are placed on the map (SOLIDER Only)
+    a. If the robot is on the last turn of mining, the mines are placed on the map (SOLDIER Only)
 
-    b. If the robot is on the last turn of defusing, the mines are removed from the map (SOLIDER Only)
+    b. If the robot is on the last turn of defusing, the mines are removed from the map (SOLDIER Only)
 
-    c. If the robot is on the last turn of capturing, then the encampment is created, and the robot is destroyed (SOLIDER Only)
+    c. If the robot is on the last turn of capturing, then the encampment is created, and the robot is destroyed (SOLDIER Only)
 
-    d. The robot moves (SOLIDER Only)
+    d. The robot moves (SOLDIER Only)
 
     e. Targeted attacks happen (ARTILLERY Only)
 
     f. Research is updated OR a unit is spawned (HQ Only)
 
-5. Mine damage is applied (SOLIDER Only)
+5. Mine damage is applied (SOLDIER Only)
 6. Attacks are performed
 
-    a. Robot auto-attacks adjacent enemies (SOLIDER Only)
+    a. Robot auto-attacks adjacent enemies (SOLDIER Only)
     
     b. Adjacent units are healed (MEDBAY Only).
     
@@ -460,8 +460,7 @@ Also, note that you are allowed to drop 6.370 without penalty very **late** into
 Getting Help
 -------------
 
-We have both a forum and an IRC Channel (#battlecode on irc.freenode.net).
-
+We have both a forum and an IRC Channel (#battlecode on irc.freenode.net). Hang out and check with us -- we're friendly!
 
 
 Disclaimers
@@ -487,3 +486,8 @@ We also have a handy unit reference chart.
 
 Energon intake is not for everyone. Please consult a physician before use. 6.370 Battlecode Corporation is not responsible in the event of injury due to energon use. Energon's side-effects include loss of limb, death, unbearable pain, tendencies to procrastinate and an unnatural senseless rage. Handle with care. Energon consumption has not been approved by any health agency and you USE IT AT YOUR OWN RISK. For this reason, please be careful when scrimmaging.
 
+Changelog
+-------------
+* **1.0.0** (1/7/2013) - Initial specs released
+* **1.0.1** (1/7/2013) - Bug hotfix. Example players no longer throw exceptions, encampment capture cost is made obvious in the spec. Misc. spec typos fixed.
+* **1.0.2** (1/7/2013) - Fixed installer for Mac
