@@ -27,11 +27,9 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
 
     protected volatile double myEnergonLevel;
     protected volatile double myShieldLevel;
-    private volatile double flux;
     protected volatile Direction myDirection;
     protected volatile boolean energonChanged = true;
     protected volatile boolean shieldChanged = true;
-    private volatile boolean fluxChanged = true;
     protected volatile long controlBits;
     // is this used ever?
     protected volatile boolean hasBeenAttacked = false;
@@ -186,13 +184,18 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
 //                dmin = d;
 //        }
 //        double prod = GameConstants.MIN_PRODUCTION + (GameConstants.MAX_PRODUCTION - GameConstants.MIN_PRODUCTION) * Math.sqrt(((double) dmin) / GameConstants.PRODUCTION_PENALTY_R2);
-//        adjustFlux(prod);
 //        
 //    }
 
     @Override
     public void processEndOfTurn() {
         super.processEndOfTurn();
+        
+        // autosend aggregated broadcast
+        if (broadcasted) myGameWorld.visitSignal(new BroadcastSignal(this, broadcastMap));
+        
+    	broadcastMap = new HashMap<Integer, Integer>();
+        broadcasted = false;
         
       	// quick hack to make mining work. move me out later
         if (type == RobotType.SOLDIER) {
@@ -287,12 +290,6 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
         		takeShieldedDamage(-this.type.attackPower);
         }
         
-        // autosend aggregated broadcast
-        if (broadcasted) myGameWorld.visitSignal(new BroadcastSignal(this, broadcastMap));
-        
-    	broadcastMap = new HashMap<Integer, Integer>();
-        broadcasted = false;
-        
         // shield decay
         if (myShieldLevel > 0.0)
         {
@@ -313,11 +310,6 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
     public double getShieldLevel() {
     	return myShieldLevel;
     }
-
-    public double getFlux() {
-        return flux;
-    }
-
 
     public Direction getDirection() {
         return myDirection;
@@ -417,12 +409,6 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
         return wasChanged;
     }
 
-    public boolean clearFluxChanged() {
-        boolean wasChanged = fluxChanged;
-        fluxChanged = false;
-        return wasChanged;
-    }
-
     public double getMaxEnergon() {
         return type.maxEnergon;
     }
@@ -513,6 +499,10 @@ public class InternalRobot extends InternalObject implements Robot, GenericRobot
     
     public int getCapturingRounds() {
     	return capturingRounds;
+    }
+    
+    public RobotType getCapturingType() {
+    	return capturingType;
     }
 
     public GameMap.MapMemory getMapMemory() {

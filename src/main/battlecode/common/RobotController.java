@@ -81,22 +81,35 @@ public interface RobotController {
      */
     public GameObject senseObjectAtLocation(MapLocation loc) throws GameActionException;
 
-    /**
-     * Sense objects of type <code>type</code> that are within this sensor's range.
+    /** 
+     * Returns an array of _all_ visible game objects
+     * @see #senseNearbyGameObjects(Class, MapLocation, int, Team)
      */
     public <T extends GameObject> T[] senseNearbyGameObjects(Class<T> type);
 
     /**
-     * Same as <code>senseNearbyGameObjects</code> except objects are returned only if they are
-     * within the given radius
+     * Returns all game objects of a given type nearby the robot
+     * @see #senseNearbyGameObjects(Class, MapLocation, int, Team)
      */
     public <T extends GameObject> T[] senseNearbyGameObjects(Class<T> type, int radiusSquared);
     
     /**
-     * Same as <code>senseNearbyGameObjects</code> excent objects are returned only if
-     * both within the given radius and on the given team
+     * Returns all game objects of a given type nearby the robot of a given team
+     * @see #senseNearbyGameObjects(Class, MapLocation, int, Team)
      */
     public <T extends GameObject> T[] senseNearbyGameObjects(Class<T> type, int radiusSquared, Team team);
+    
+    
+    /**
+     * Senses all game objects of a given type within a given search area specified by the parameters
+     * @param type - type of game object to sense, eg: Robot.class
+     * @param center - center of the given search radius
+     * @param radiusSquared - return objects this distance away from the center
+     * @param team - filter game objects by the given team. If null is passed, objects from all teams are returned
+     * @return array of class type of game objects
+     */
+    public <T extends GameObject> T[] senseNearbyGameObjects(Class<T> type, MapLocation center, int radiusSquared, Team team);
+    
     
     /**
      * Sense the location of the object <code>o</code>.
@@ -122,23 +135,53 @@ public interface RobotController {
      */
     public boolean canSenseSquare(MapLocation loc);
 
-    public MapLocation[] senseAllEncampments();
-    public MapLocation[] senseAlliedEncampments();
+    /**
+     * @return array of map location containing all encampment squares on the map
+     * @see #senseEncampmentSquares(MapLocation, int, Team)
+     */
+    public MapLocation[] senseAllEncampmentSquares();
+    
+    /**
+     * @return array of all encampment squares owned by the allied team
+     * @see #senseEncampmentSquares(MapLocation, int, Team)
+     */
+    public MapLocation[] senseAlliedEncampmentSquares();
+    
+    /**
+     * Returns all encampment squares filtered on the given search area
+     * 
+     * Allows a team-based filter which can be one of the following parameters:
+     * <ul>
+     * <li>Null - Senses _all_ encampments on the map
+     * <li>Neutral - Senses all encampments that not owned by the sensing robot's team
+     * <li>Allied Team - Senses all encampments owned by the allied team
+     * </ui>
+     * Note that you cannot sense all enemy-owned encampments
+     * 
+     * @param center - location to search for encampment squares
+     * @param radiusSquared - radius around the center to search for encampment squares
+     * @param team - team filter (null, allied team, or neutral team, see usage above)
+     * @return Array of map locations containing found encampment squares satisfying the criteria
+     * @throws GameActionException - attempting to search all enemy encampment squares
+     */
+    public MapLocation[] senseEncampmentSquares(MapLocation center, int radiusSquared, Team team) throws GameActionException;
 
     /**
      * Sense whether a mine exists at a given location
      * Returns either the TEAM of the mine or null if there is no mine
      * @param location to scan
-     * @return
+     * @return team the mine belongs to or null if there is no mine there
      */
     public Team senseMine(MapLocation location);
    
-    
     /**
-     * @return An array of MapLocations containing all known enemy mine locations
+     * Returns all mines within a given search radius specified by the parameters
+     * @param center - center of the search area
+     * @param radiusSquared - radius around the center to include mines
+     * @param team - only return mines of this team. If null is passed, all team's mines are returned
+     * @return An array of MapLocations containing mine locations
      */
-    public MapLocation[] senseAllEnemyMineLocations();
-    
+    public MapLocation[] senseMineLocations(MapLocation center, int radiusSquared, Team team) throws GameActionException;
 
     /**
      * @return location of this robot's HQ
@@ -151,11 +194,11 @@ public interface RobotController {
     public MapLocation senseEnemyHQLocation();
     
     /**
-     * Check the enemy team's NUKE research progress - only HQ can do this
-     * @return enemy NUKE research progress
+     * Senses the enemy team's NUKE research progress - only HQ can do this
+     * @return true if the enemy team's NUKE is halfways researched.
      * @throws GameActionException if not HQ
      */
-    public int senseEnemyNukeProgress() throws GameActionException;
+    public boolean senseEnemyNukeHalfDone() throws GameActionException;
     
     /**
      * Checks if the given map location is an encampment square.
@@ -245,10 +288,9 @@ public interface RobotController {
      * directly in front of this robot.  The square must not already be occupied.
      * The new robot is created and starts executing bytecodes immediately
      *
-     * @param type the type of robot to spawn; cannot be null.
+     * @param dir the direction to spawn robot in; cannot be null.
      * @throws IllegalStateException if this robot is not an ARCHON
      * @throws GameActionException   if this robot is currently moving (ALREADY_ACTIVE)
-     * @throws GameActionException   if this robot does not have enough flux to spawn a robot of type <code>type</code> (NOT_ENOUGH_FLUX)
      * @throws GameActionException   if <code>loc</code> is already occupied (CANT_MOVE_THERE)
      */
     public void spawn(Direction dir) throws GameActionException;
@@ -280,7 +322,6 @@ public interface RobotController {
     /**
      * Captures the encampment soldier is standing on. 
      * Immediately kills the soldier and encampment, and spawns an encampment robot of the given type
-     * @param dir
      * @param type
      * @throws GameActionException
      */
@@ -303,15 +344,16 @@ public interface RobotController {
      * Checks the total number of rounds a given research has been researched
      * Will only work if the robot is an HQ
      * @param upgrade
-     * @return
+     * @return the number of rounds that have been spent upgrading
      * @throws GameActionException
      */
     public int checkResearchProgress(Upgrade upgrade) throws GameActionException;
     
     
     /**
-     * Ends the current round.  This robot will receive a flux bonus of
-     * <code>GameConstants.YIELD_BONUS * GameConstants.UNIT_UPKEEP * Clock.getBytecodesLeft() / GameConstants.BYTECODE_LIMIT</code>.
+     * Ends the current round.  This robot will receive a power bonus of
+     * <code>GameConstants.POWER_COST_PER_BYTECODE * (GameConstants.BYTECODE_LIMIT
+		 * - RobotMonitor.getBytecodesUsed())</code>.
      * Never fails.
      */
     public void yield();

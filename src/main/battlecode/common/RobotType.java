@@ -3,14 +3,14 @@ package battlecode.common;
 import static battlecode.common.RobotLevel.ON_GROUND;
 
 public enum RobotType {
-    //          LEVEL,      MXE         MXF     COS     MD MVC  SR  SA          AR AR   AA      AD      AP      AIR     GROUND  ENCMP
-	HQ          (ON_GROUND, 500,        0,      0,      0, 0,   14, 360,        0, 0 ,  0,      0,      0,      true,   true,   false),
-    SOLDIER     (ON_GROUND, 40,         0,      0,      0, 0,   14, 360,        0, 2 ,  360,    1,      6,      true,   true,   false),
-    MEDBAY      (ON_GROUND, 100,        0,      0,      0, 0,   14, 360,        0, 2 ,  360,    1,      2,      true,   true,   true),
-    SHIELDS     (ON_GROUND, 100,        0,      0,      0, 0,   14, 360,        0, 2 ,  360,    1,      5,      true,   true,   true),
-    ARTILLERY   (ON_GROUND, 100,        0,      0,      0, 0,   14, 360,        0, 63,  360,    20,     40,     true,   true,   true),
-    GENERATOR   (ON_GROUND, 100,        0,      0,      0, 0,   14, 360,        0, 0 ,  0,      0,      0,      true,   true,   true),
-    SUPPLIER    (ON_GROUND, 100,        0,      0,      0, 0,   14, 360,        0, 0 ,  0,      0,      0,      true,   true,   true),
+    //          LEVEL,      MXE    SR  SA          AR AR   AA      AD      AP      ATTACK  ENCMP
+  	HQ          (ON_GROUND, 500,   14, 360,        0, 0 ,  0,      0,      0,      true,   false),
+    SOLDIER     (ON_GROUND, 40,    14, 360,        0, 2 ,  360,    1,      6,      true,   false),
+    MEDBAY      (ON_GROUND, 100,   14, 360,        0, 2 ,  360,    1,      2,      true,   true),
+    SHIELDS     (ON_GROUND, 100,   14, 360,        0, 2 ,  360,    1,      5,      true,   true),
+    ARTILLERY   (ON_GROUND, 100,   14, 360,        0, 63,  360,    20,     40,     true,   true),
+    GENERATOR   (ON_GROUND, 100,   14, 360,        0, 0 ,  0,      0,      0,      true,   true),
+    SUPPLIER    (ON_GROUND, 100,   14, 360,        0, 0 ,  0,      0,      0,      true,   true),
     ;
 
     /**
@@ -22,32 +22,6 @@ public enum RobotType {
      * The maximum amount of energon the robot can have.
      */
     public final double maxEnergon;
-
-    /**
-     * The maximum amount of flux the robot can have.
-     */
-    public final double maxFlux;
-
-    /**
-     * The amount of flux needed to spawn the robot.
-     */
-    public final double spawnCost;
-
-    /**
-     * The number of turns it takes the robot to move orthogonally.
-     */
-    public final int moveDelayOrthogonal;
-
-    /**
-     * The number of turns it takes the robot to move diagonally.
-     * Equal to <code>(int)Math.round(moveDelayOrthogonal*Math.sqrt(2.))</code>.
-     */
-    public final int moveDelayDiagonal;
-
-    /**
-     * The cost in flux to move the robot one square.
-     */
-    public final double moveCost;
 
     /**
      * The square of the maximum distance that the robot can sense.
@@ -85,14 +59,9 @@ public enum RobotType {
     public final double attackPower;
 
     /**
-     * Whether or not the robot can attack air units.
+     * Whether or not the robot can attack units.
      */
-    public final boolean canAttackAir;
-
-    /**
-     * Whether or not the robot can attack ground units.
-     */
-    public final boolean canAttackGround;
+    public final boolean canAttack;
 
     public final double sensorCosHalfTheta;
     public final double attackCosHalfTheta;
@@ -103,30 +72,11 @@ public enum RobotType {
      * Returns true if the robot can attack robots at the given level.
      */
     public boolean canAttack(RobotLevel level) {
-        switch (level) {
-            case ON_GROUND:
-                return canAttackGround;
-            case IN_AIR:
-                return canAttackAir;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Returns <code>true</code> if this robot's level is
-     * <code>RobotLevel.IN_AIR</code>.
-     */
-    public boolean isAirborne() {
-        return level == RobotLevel.IN_AIR;
+				return canAttack;
     }
 
     RobotType(RobotLevel level,
               double maxEnergon,
-              double maxFlux,
-              double spawnCost,
-              int moveDelayOrthogonal,
-              double moveCost,
               int sensorRadiusSquared,
               double sensorAngle,
               int attackRadiusMinSquared,
@@ -134,16 +84,10 @@ public enum RobotType {
               double attackAngle,
               int attackDelay,
               double attackPower,
-              boolean canAttackAir,
-              boolean canAttackGround,
+              boolean canAttack,
               boolean isEncampment) {
         this.level = level;
         this.maxEnergon = maxEnergon;
-        this.maxFlux = maxFlux;
-        this.spawnCost = spawnCost;
-        this.moveDelayOrthogonal = moveDelayOrthogonal;
-        this.moveDelayDiagonal = (int) Math.round(moveDelayOrthogonal * Math.sqrt(2.));
-        this.moveCost = moveCost;
         this.sensorRadiusSquared = sensorRadiusSquared;
         this.sensorAngle = sensorAngle;
         this.attackRadiusMaxSquared = attackRadiusMaxSquared;
@@ -151,8 +95,7 @@ public enum RobotType {
         this.attackAngle = attackAngle;
         this.attackDelay = attackDelay;
         this.attackPower = attackPower;
-        this.canAttackAir = canAttackAir;
-        this.canAttackGround = canAttackGround;
+        this.canAttack = canAttack;
         this.sensorCosHalfTheta = Math.cos(sensorAngle * Math.PI / 360.);
         this.attackCosHalfTheta = Math.cos(attackAngle * Math.PI / 360.);
         this.isEncampment = isEncampment;
