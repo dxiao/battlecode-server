@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import battlecode.common.Direction;
@@ -241,14 +242,14 @@ public class RobotControllerImpl extends ControllerShared implements RobotContro
     	assertNotMoving();
     	
     	int defuseRadius = 2;
-    	if (hasUpgrade(Upgrade.DIFFUSION))
+    	if (hasUpgrade(Upgrade.DEFUSION))
     		defuseRadius = robot.type.sensorRadiusSquared + (hasUpgrade(Upgrade.VISION) ? GameConstants.VISION_UPGRADE_BONUS : 0);
     		
     	if (loc.distanceSquaredTo(getLocation()) > defuseRadius)
     		throw new GameActionException(OUT_OF_RANGE, "You can't defuse that far");
     	
-    	if (hasUpgrade(Upgrade.DIFFUSION))
-    		robot.activateDefuser(new MinelayerSignal(robot, false), GameConstants.MINE_DEFUSE_DIFFUSION_DELAY, loc);
+    	if (hasUpgrade(Upgrade.DEFUSION))
+    		robot.activateDefuser(new MinelayerSignal(robot, false), GameConstants.MINE_DEFUSE_DEFUSION_DELAY, loc);
     	else
     		robot.activateDefuser(new MinelayerSignal(robot, false), GameConstants.MINE_DEFUSE_DELAY, loc);
     }
@@ -493,22 +494,76 @@ public class RobotControllerImpl extends ControllerShared implements RobotContro
 //    }
     
     public MapLocation[] senseMineLocations(final MapLocation center, final int radiusSquared, final Team team) {
+    	final Set<MapLocation> knownlocs = gameWorld.getKnownMineMap(getTeam());
     	if (team == null)
     	{
-    		if (radiusSquared >= 100000)
-    			return gameWorld.getMineMaps().keySet().toArray(new MapLocation[]{});
+    		if (radiusSquared >= GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT + GameConstants.MAP_MAX_WIDTH*GameConstants.MAP_MAX_WIDTH)
+        	{
+    			Predicate<MapLocation> p = new Predicate<MapLocation>() {
+            		public boolean apply(MapLocation o) {
+            			return gameWorld.getMine(o) != getTeam().opponent()
+            					|| knownlocs.contains(o);
+            		}
+            	};
+            	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
+        	}
     		Predicate<MapLocation> p = new Predicate<MapLocation>() {
         		public boolean apply(MapLocation o) {
-        			return center.distanceSquaredTo(o) <= radiusSquared;
+        			return (gameWorld.getMine(o) != getTeam().opponent() || knownlocs.contains(o))
+        					&& center.distanceSquaredTo(o) <= radiusSquared;
         		}
         	};
         	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
     	}
-    	if (radiusSquared >= 100000)
+    	if (radiusSquared >= GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT + GameConstants.MAP_MAX_WIDTH*GameConstants.MAP_MAX_WIDTH)
+    	{
+    		if (team != getTeam().opponent())
+    		{
+    			Predicate<MapLocation> p = new Predicate<MapLocation>() {
+            		public boolean apply(MapLocation o) {
+            			return gameWorld.getMine(o) == team;
+            		}
+            	};
+            	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
+    		}
+    		Predicate<MapLocation> p = new Predicate<MapLocation>() {
+        		public boolean apply(MapLocation o) {
+        			return gameWorld.getMine(o) == team
+        					&& knownlocs.contains(o);
+        		}
+        	};
+        	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
+    	}
+    	if (team != getTeam().opponent())
+		{
+        	Predicate<MapLocation> p = new Predicate<MapLocation>() {
+        		public boolean apply(MapLocation o) {
+        			return center.distanceSquaredTo(o) <= radiusSquared
+    		        		 && gameWorld.getMine(o) == team;
+        		}
+        	};
+        	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
+		}
+    	Predicate<MapLocation> p = new Predicate<MapLocation>() {
+    		public boolean apply(MapLocation o) {
+    			return center.distanceSquaredTo(o) <= radiusSquared
+		        		 && gameWorld.getMine(o) == team
+		        		 && knownlocs.contains(o);
+    		}
+    	};
+    	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
+    }
+    
+    public MapLocation[] senseNonAlliedMineLocations(final MapLocation center, final int radiusSquared) {
+    	final Set<MapLocation> knownlocs = gameWorld.getKnownMineMap(getTeam());
+    	if (radiusSquared >= GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT + GameConstants.MAP_MAX_WIDTH*GameConstants.MAP_MAX_WIDTH)
     	{
     		Predicate<MapLocation> p = new Predicate<MapLocation>() {
         		public boolean apply(MapLocation o) {
-        			return gameWorld.getMine(o) == team;
+        			return (gameWorld.getMine(o) != getTeam()
+        					&& knownlocs.contains(o))
+        					|| gameWorld.getMine(o) == Team.NEUTRAL;
+        					
         		}
         	};
         	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
@@ -516,7 +571,9 @@ public class RobotControllerImpl extends ControllerShared implements RobotContro
     	Predicate<MapLocation> p = new Predicate<MapLocation>() {
     		public boolean apply(MapLocation o) {
     			return center.distanceSquaredTo(o) <= radiusSquared
-		        		 && gameWorld.getMine(o) == team;
+		        		 && ((gameWorld.getMine(o) != getTeam()
+		        		 && knownlocs.contains(o))
+		        		 || gameWorld.getMine(o) == Team.NEUTRAL);
     		}
     	};
     	return Iterables.toArray((Iterable<MapLocation>) Iterables.filter(gameWorld.getMineMaps().keySet(), p), MapLocation.class); 
