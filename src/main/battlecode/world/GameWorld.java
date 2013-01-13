@@ -174,7 +174,7 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
         removeDead();
         
         addSignal(new FluxChangeSignal(teamResources));
-				addSignal(new ResearchChangeSignal(research));
+		addSignal(new ResearchChangeSignal(research));
 
         if (timeLimitReached() && winner == null) {
             
@@ -338,10 +338,6 @@ public class GameWorld extends BaseWorld<InternalObject> implements GenericWorld
     		mineLocations.put(loc, t);
     		if(t==Team.A || t==Team.B)
     			addKnownMineLocation(t, loc);
-				else {
-						addKnownMineLocation(Team.A, loc);
-						addKnownMineLocation(Team.B, loc);
-				}
     	}
     }
     
