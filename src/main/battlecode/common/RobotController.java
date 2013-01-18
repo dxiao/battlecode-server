@@ -322,6 +322,14 @@ public interface RobotController {
     
     /**
      * SOLDIER only
+     * Checks how many rounds are left for the current mine being laid, if any.
+     * 
+     * @throws GameActionException
+     */
+    public int senseMineRoundsLeft() throws GameActionException;
+    
+    /**
+     * SOLDIER only
      * Defuses a mine on the target square. A robot cannot move until the defusion is complete.
      * 
      * @throws GameActionException
